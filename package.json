@@ -1,0 +1,16 @@
+{
+  "name": "ganesh-ai-brain",
+  "version": "1.0.0",
+  "description": "Ganesh Second Brain — hierarchical+parallel orchestration, subagents, MCP, visual pipelines",
+  "main": "src/ganeshOrchestrator.ts",
+  "scripts": {
+    "test": "npx tsx test.ts"
+  },
+  "dependencies": {
+    "xstate": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
