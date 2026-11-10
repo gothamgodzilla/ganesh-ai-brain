@@ -1,0 +1,9 @@
+node_modules/
+dist/
+brain-server/ui/node_modules/
+data/*.json
+data/*.jsonl
+data/brain/
+.env
+.DS_Store
+*.log

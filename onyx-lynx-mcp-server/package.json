@@ -1,0 +1,34 @@
+{
+  "name": "onyx-lynx-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for Onyx (business discovery: Google Places / Apple Maps / Yelp / zip & Plus-Code resolution) and Lynx (Resend outreach email + lead/suppression tracking) \u2014 the GANESH-Ai-BRAIN local-business outreach engine.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start:unsubscribe": "node dist/unsubscribe-server.js",
+    "dev:unsubscribe": "tsx watch src/unsubscribe-server.ts",
+    "test": "node scripts/smoke-test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "axios": "^1.7.9",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "open-location-code": "^1.0.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
