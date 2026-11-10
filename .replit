@@ -1,0 +1,11 @@
+run = "npm run start"
+entrypoint = "brain-server/index.mjs"
+modules = ["nodejs-22"]
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "npm run build && npm run start"]
+deploymentTarget = "autoscale"
+build = ["sh", "-c", "npm install && npm run build"]

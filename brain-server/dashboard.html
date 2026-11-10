@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ganesh.guru — Monitoring Core</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      /* tailwind theme.extend — obsidian / amethyst / electric */
+      --obsidian-900: #0B0A0F;
+      --obsidian-800: #12111A;
+      --obsidian-700: #1C1A26;
+      --amethyst-500: #A855F7;
+      --amethyst-400: #C084FC;
+      --amethyst-300: #E9D5FF;
+      --electric-pink: #F472B6;
+      --electric-indigo: #6366F1;
+      --shadow-glass: 0 8px 32px 0 rgba(168, 85, 247, 0.15);
+      --glow-amethyst: rgba(168, 85, 247, 0.35);
+      --text: var(--amethyst-300);
+      --muted: #9d8ec4;
+      --success: #4ade80;
+      --warn: #fbbf24;
+      --error: #f87171;
+      --sidebar-w: 240px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.22), transparent),
+        var(--obsidian-900);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: linear-gradient(180deg, var(--obsidian-800) 0%, var(--obsidian-900) 100%);
+      border-right: 1px solid var(--obsidian-700);
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand {
+      padding: 0 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--obsidian-700);
+      margin-bottom: 1rem;
+    }
+    .brand-eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--amethyst-400);
+      margin: 0 0 0.35rem;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      margin: 0.35rem 0 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .nav { list-style: none; margin: 0; padding: 0 0.75rem; flex: 1; }
+    .nav li { margin-bottom: 0.25rem; }
+    .nav button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.7rem 0.75rem;
+      border-radius: 8px;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav button:hover { background: var(--obsidian-700); color: var(--text); }
+    .nav button.active {
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), transparent);
+      color: var(--amethyst-300);
+      box-shadow: inset 3px 0 0 var(--amethyst-500);
+    }
+    .nav-icon { opacity: 0.7; font-size: 0.85rem; }
+    .sidebar-foot {
+      padding: 1rem 1.25rem 0;
+      border-top: 1px solid var(--obsidian-700);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .main { padding: 1.5rem 1.75rem 2.5rem; overflow-x: hidden; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .topbar h2 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
+    .topbar p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; }
+    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid var(--obsidian-700);
+      background: var(--obsidian-800);
+      color: var(--text);
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { border-color: var(--amethyst-500); box-shadow: var(--shadow-glass); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--electric-indigo), var(--amethyst-500));
+      border-color: var(--amethyst-400);
+      color: #fff;
+    }
+    .banner {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 1px solid var(--obsidian-700);
+      background: var(--obsidian-800);
+      font-size: 0.85rem;
+    }
+    .banner.error { border-color: var(--error); color: var(--error); }
+    .banner.warn { border-color: var(--warn); color: var(--warn); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .stat {
+      background: var(--obsidian-800);
+      border: 1px solid var(--obsidian-700);
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: var(--shadow-glass);
+    }
+    .stat.highlight {
+      border-color: var(--amethyst-500);
+      box-shadow: var(--shadow-glass), 0 0 24px var(--glow-amethyst);
+    }
+    .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.35rem; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; margin: 0; color: var(--amethyst-400); }
+    .stat-meta { font-size: 0.75rem; color: var(--muted); margin: 0.25rem 0 0; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 1024px) { .shell { grid-template-columns: 1fr; } .sidebar { height: auto; position: relative; } .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--obsidian-800);
+      border: 1px solid var(--obsidian-700);
+      border-radius: 12px;
+      padding: 1.15rem 1.25rem;
+      box-shadow: var(--shadow-glass);
+    }
+    .card h3 {
+      margin: 0 0 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .funnel { display: flex; flex-direction: column; gap: 0.3rem; }
+    .funnel-step { display: flex; flex-direction: column; align-items: stretch; }
+    .funnel-node {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--obsidian-700);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), var(--obsidian-700));
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .funnel-node:hover { border-color: var(--amethyst-500); }
+    .funnel-node.hot { border-color: var(--amethyst-500); box-shadow: var(--shadow-glass); }
+    .funnel-count { font-size: 1.25rem; font-weight: 700; color: var(--electric-pink); }
+    .funnel-label { font-size: 0.85rem; color: var(--text); }
+    .funnel-link { font-size: 0.72rem; color: var(--amethyst-400); text-decoration: none; }
+    .funnel-arrow { text-align: center; color: var(--amethyst-500); font-size: 0.7rem; padding: 0.1rem 0; }
+    .heatmap-wrap { overflow-x: auto; }
+    .heatmap {
+      display: grid;
+      gap: 4px;
+      min-width: 100%;
+    }
+    .heatmap-header, .heatmap-row {
+      display: grid;
+      grid-template-columns: 120px repeat(6, 1fr);
+      gap: 4px;
+      align-items: center;
+    }
+    .heatmap-header span {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      text-align: center;
+      padding: 0.35rem;
+    }
+    .heatmap-header span:first-child { text-align: left; }
+    .heatmap-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .heatmap-label small { display: block; font-weight: 400; color: var(--muted); font-size: 0.68rem; }
+    .heat-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px solid var(--obsidian-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-height: 36px;
+      transition: box-shadow 0.2s;
+    }
+    .heat-cell:hover { box-shadow: var(--shadow-glass); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 0.55rem 0.4rem; border-bottom: 1px solid var(--obsidian-700); }
+    th { color: var(--muted); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    a { color: var(--amethyst-400); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .empty { color: var(--muted); margin: 0; font-size: 0.85rem; }
+    .pill {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      border: 1px solid var(--obsidian-700);
+    }
+    .pill.ok { border-color: var(--success); color: var(--success); }
+    .pill.off { border-color: var(--warn); color: var(--warn); }
+    .session-row td:first-child { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--electric-pink); }
+    .status-strip { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+    code { background: var(--obsidian-700); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.8em; color: var(--electric-pink); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <p class="brand-eyebrow">Ganesh.guru</p>
+        <h1>Monitoring Core</h1>
+        <p class="brand-sub">B2B revenue engine · live edge fleet</p>
+      </div>
+      <ul class="nav" id="nav">
+        <li><button type="button" class="active" data-panel="dashboard"><span class="nav-icon">◆</span> Dashboard</button></li>
+        <li><button type="button" data-panel="fleets"><span class="nav-icon">◇</span> Active Fleets</button></li>
+        <li><button type="button" data-panel="outreach"><span class="nav-icon">◇</span> Outreach Matrix</button></li>
+        <li><button type="button" data-panel="stripe"><span class="nav-icon">◇</span> Stripe Logs</button></li>
+      </ul>
+      <div class="sidebar-foot" id="sidebar-foot">Syncing…</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h2 id="panel-title">Dashboard</h2>
+          <p id="panel-sub">Acquisition velocity · conversion funnel · live telemetry</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" id="refresh">Refresh</button>
+          <a class="btn" id="preview-link" href="https://preview.ceo.slay.llc" target="_blank" rel="noreferrer">Preview Hub</a>
+          <a class="btn btn-primary" id="stripe-link" href="https://dashboard.stripe.com/payments" target="_blank" rel="noreferrer">Stripe</a>
+        </div>
+      </div>
+
+      <div id="error" class="banner error" hidden></div>
+      <div id="warn" class="banner warn" hidden></div>
+      <div class="status-strip" id="status-strip"></div>
+
+      <!-- Dashboard -->
+      <section class="panel active" id="panel-dashboard">
+        <div class="stats" id="stats"></div>
+        <div class="grid-2">
+          <article class="card">
+            <h3>Conversion funnel</h3>
+            <div class="funnel" id="funnel"></div>
+            <p class="stat-meta" id="attribution" style="margin-top:0.75rem"></p>
+          </article>
+          <article class="card">
+            <h3>Target heatmap · ZIP × vertical</h3>
+            <div class="heatmap-wrap" id="heatmap"></div>
+          </article>
+        </div>
+        <article class="card">
+          <h3>Recent user sessions · activity stream</h3>
+          <div id="sessions"></div>
+        </article>
+      </section>
+
+      <!-- Active Fleets -->
+      <section class="panel" id="panel-fleets">
+        <article class="card">
+          <h3>Active edge portals · Vercel routable slugs</h3>
+          <div id="fleets-table"></div>
+        </article>
+      </section>
+
+      <!-- Outreach Matrix -->
+      <section class="panel" id="panel-outreach">
+        <article class="card">
+          <h3>Contacted leads · live outbound pool</h3>
+          <div id="outreach-table"></div>
+        </article>
+      </section>
+
+      <!-- Stripe Logs -->
+      <section class="panel" id="panel-stripe">
+        <div class="stats" id="stripe-stats"></div>
+        <article class="card">
+          <h3>Stripe activations · $499.99 checkout</h3>
+          <div id="payments"></div>
+        </article>
+        <article class="card" style="margin-top:1rem">
+          <h3>Monitor control matrix</h3>
+          <table>
+            <thead><tr><th>Infrastructure</th><th>Endpoint</th><th>Intent</th></tr></thead>
+            <tbody id="matrix"></tbody>
+          </table>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const money = (n, currency = 'usd') =>
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(n);
+
+    const fmtDate = (iso) => {
+      try { return new Date(iso).toLocaleString(); } catch { return iso ?? '—'; }
+    };
+
+    const PANEL_COPY = {
+      dashboard: { title: 'Dashboard', sub: 'Acquisition velocity · conversion funnel · live telemetry' },
+      fleets: { title: 'Active Fleets', sub: 'Routable Vercel edge portals · preview.ceo.slay.llc' },
+      outreach: { title: 'Outreach Matrix', sub: 'Contacted leads · Jackson, Long Beach, Vegas, Seattle pipelines' },
+      stripe: { title: 'Stripe Logs', sub: 'Real-time single-tap activations · webhook telemetry' },
+    };
+
+    const el = (id) => document.getElementById(id);
+    if (location.search) history.replaceState(null, '', location.pathname);
+
+    const fetchOpts = { credentials: 'include' };
+
+    let dashData = null;
+
+    document.querySelectorAll('.nav button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const id = btn.dataset.panel;
+        document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+        el(`panel-${id}`).classList.add('active');
+        const copy = PANEL_COPY[id];
+        el('panel-title').textContent = copy.title;
+        el('panel-sub').textContent = copy.sub;
+      });
+    });
+
+    function heatColor(value, max) {
+      if (!value) return { bg: 'var(--obsidian-700)', color: 'var(--muted)' };
+      const t = Math.min(1, value / Math.max(max, 1));
+      const alpha = 0.12 + t * 0.78;
+      return {
+        bg: `rgba(168, 85, 247, ${alpha})`,
+        color: t > 0.55 ? '#fff' : 'var(--amethyst-300)',
+        glow: t > 0.6 ? '0 8px 32px 0 rgba(168, 85, 247, 0.25)' : 'none',
+      };
+    }
+
+    function renderHeatmap(heatmap, verticals) {
+      if (!heatmap?.length) {
+        el('heatmap').innerHTML = '<p class="empty">Run <code>npm run brain:sync</code> to populate ZIP matrix.</p>';
+        return;
+      }
+      const maxCell = Math.max(...heatmap.flatMap((r) => verticals.map((v) => r[v] ?? 0)), 1);
+      const header = `<div class="heatmap-header"><span>Market</span>${verticals.map((v) => `<span>${v}</span>`).join('')}</div>`;
+      const rows = heatmap.map((row) => {
+        const cells = verticals.map((v) => {
+          const n = row[v] ?? 0;
+          const c = heatColor(n, maxCell);
+          return `<div class="heat-cell" style="background:${c.bg};color:${c.color};box-shadow:${c.glow}" title="${row.label} · ${v}: ${n}">${n || '·'}</div>`;
+        }).join('');
+        return `<div class="heatmap-row"><div class="heatmap-label">${row.label}<small>${row.zip}</small></div>${cells}</div>`;
+      }).join('');
+      el('heatmap').innerHTML = `<div class="heatmap">${header}${rows}</div>`;
+    }
+
+    function render(data, health) {
+      dashData = data;
+      const sys = data.system ?? {};
+      const rev = data.revenue ?? {};
+      const links = data.links ?? {};
+      const monitor = data.monitor ?? {};
+
+      if (links.previewHub) el('preview-link').href = links.previewHub;
+
+      if (!rev.configured) {
+        el('warn').innerHTML = `Stripe API not fully configured. Webhook: <code>${links.stripeWebhook ?? '/api/v1/stripe/webhook'}</code>`;
+        el('warn').hidden = false;
+      } else el('warn').hidden = true;
+
+      if (health) {
+        el('status-strip').innerHTML = [
+          `<span class="pill ${health.sync ? 'ok' : 'off'}">Sync ${health.sync ? 'ON' : 'OFF'}</span>`,
+          `<span class="pill ${health.stripe ? 'ok' : 'off'}">Stripe ${health.stripe ? 'ON' : 'OFF'}</span>`,
+          `<span class="pill ${health.webhook ? 'ok' : 'off'}">Webhook ${health.webhook ? 'ON' : 'OFF'}</span>`,
+          `<span class="pill ${health.internalIngest ? 'ok' : 'off'}">Ingest ${health.internalIngest ? 'ON' : 'OFF'}</span>`,
+        ].join('');
+      }
+
+      const funnel = monitor.funnel ?? [];
+      el('funnel').innerHTML = funnel.map((step, i) => `
+        <div class="funnel-step">
+          <div class="funnel-node ${step.count > 0 ? 'hot' : ''}">
+            <span class="funnel-label">${step.label}</span>
+            <span>
+              ${step.count !== undefined ? `<span class="funnel-count">${step.count.toLocaleString()}</span>` : ''}
+              ${step.url ? `<a class="funnel-link" href="${step.url}" target="_blank" rel="noreferrer">open ↗</a>` : ''}
+            </span>
+          </div>
+          ${i < funnel.length - 1 ? '<span class="funnel-arrow">▼</span>' : ''}
+        </div>
+      `).join('');
+      el('attribution').textContent = monitor.attributionFormat ?? '';
+
+      el('stats').innerHTML = `
+        <div class="stat highlight"><p class="stat-label">Revenue</p><p class="stat-value">${money(rev.totalRevenue ?? 0)}</p><p class="stat-meta">${rev.paymentCount ?? 0} conversions</p></div>
+        <div class="stat"><p class="stat-label">Pitches sent</p><p class="stat-value">${(sys.contacted ?? 0).toLocaleString()}</p><p class="stat-meta">live cold email</p></div>
+        <div class="stat"><p class="stat-label">Edge portals</p><p class="stat-value">${(sys.previewSlugs ?? 0).toLocaleString()}</p><p class="stat-meta">routable slugs</p></div>
+        <div class="stat"><p class="stat-label">Open rate</p><p class="stat-value">${sys.contacted ? (((sys.portalsOpened ?? 0) / sys.contacted) * 100).toFixed(1) : '0'}%</p><p class="stat-meta">${sys.portalsOpened ?? 0} portal opens</p></div>
+        <div class="stat"><p class="stat-label">Conv. rate</p><p class="stat-value">${(rev.conversionRate ?? 0).toFixed(2)}%</p><p class="stat-meta">$499.99 tier</p></div>
+        <div class="stat"><p class="stat-label">Pipeline $</p><p class="stat-value">${money(rev.pipelinePotential ?? 0)}</p><p class="stat-meta">intro potential</p></div>
+      `;
+
+      renderHeatmap(monitor.zipHeatmap, monitor.verticals ?? ['restaurant', 'bar', 'salon', 'dispensary', 'gym', 'auto']);
+
+      const sessions = [...(monitor.recentSessions ?? [])];
+      const paidSessions = (rev.recentPayments ?? []).map((p) => ({
+        tag: p.businessId ?? p.id,
+        business: p.businessId ? `${p.businessId}${p.tier ? ':' + p.tier : ''}` : 'Stripe checkout',
+        device: 'Mobile · Apple Pay / Card',
+        duration: money((p.amount ?? 0) / 100, p.currency),
+        timestamp: p.createdAt,
+        previewUrl: null,
+        zip: '—',
+      }));
+      const stream = [...paidSessions, ...sessions].slice(0, 20);
+
+      el('sessions').innerHTML = stream.length ? `
+        <table>
+          <thead><tr><th>Tracking tag</th><th>Business</th><th>Device / signal</th><th>Duration / value</th><th>ZIP</th><th>Timestamp</th></tr></thead>
+          <tbody>
+            ${stream.map((s) => `
+              <tr class="session-row">
+                <td>${s.tag ?? '—'}</td>
+                <td>${s.previewUrl ? `<a href="${s.previewUrl}" target="_blank" rel="noreferrer">${s.business}</a>` : s.business}</td>
+                <td>${s.device ?? '—'}</td>
+                <td>${s.duration ?? '—'}</td>
+                <td>${s.zip ?? '—'}</td>
+                <td>${fmtDate(s.timestamp)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p class="empty">Activity stream fills when portals are opened or checkouts complete.</p>';
+
+      const outreach = sys.recentOutreach ?? [];
+      el('outreach-table').innerHTML = outreach.length ? `
+        <table>
+          <thead><tr><th>Business</th><th>ZIP</th><th>Recipient</th><th>Preview</th><th>Sent</th></tr></thead>
+          <tbody>${outreach.map((r) => `
+            <tr>
+              <td>${r.name}</td>
+              <td>${r.zip ?? '—'}</td>
+              <td>${r.recipient ?? '—'}</td>
+              <td>${r.previewUrl ? `<a href="${r.previewUrl}" target="_blank" rel="noreferrer">${r.slug}</a>` : r.slug}</td>
+              <td>${fmtDate(r.timestamp)}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      ` : '<p class="empty">No outreach synced.</p>';
+
+      el('fleets-table').innerHTML = `
+        <p class="stat-meta" style="margin-bottom:1rem">${(sys.previewSlugs ?? 0).toLocaleString()} live routable portals on <a href="${sys.previewBase ?? links.previewHub}" target="_blank" rel="noreferrer">preview hub</a></p>
+        <table>
+          <thead><tr><th>Slug</th><th>Business</th><th>Market</th><th>Portal</th></tr></thead>
+          <tbody>
+            ${outreach.slice(0, 30).map((r) => `
+              <tr>
+                <td><code>${r.slug}</code></td>
+                <td>${r.name}</td>
+                <td>${r.zip ?? '—'}</td>
+                <td><a href="${r.previewUrl}" target="_blank" rel="noreferrer">open ↗</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      el('stripe-stats').innerHTML = `
+        <div class="stat highlight"><p class="stat-label">Today</p><p class="stat-value">${money(rev.todayRevenue ?? 0)}</p><p class="stat-meta">${rev.todayCount ?? 0} today</p></div>
+        <div class="stat"><p class="stat-label">Total</p><p class="stat-value">${money(rev.totalRevenue ?? 0)}</p><p class="stat-meta">all time</p></div>
+      `;
+
+      const payments = rev.recentPayments ?? [];
+      el('payments').innerHTML = payments.length ? `
+        <table>
+          <thead><tr><th>When</th><th>Amount</th><th>Reference</th><th>Email</th></tr></thead>
+          <tbody>${payments.map((p) => `
+            <tr>
+              <td>${fmtDate(p.createdAt)}</td>
+              <td>${money((p.amount ?? 0) / 100, p.currency)}</td>
+              <td><code>${p.businessId ? `${p.businessId}${p.tier ? ':' + p.tier : ''}` : '—'}</code></td>
+              <td>${p.customerEmail ?? '—'}</td>
+            </tr>
+          `).join('')}</tbody>
+        </table>
+      ` : '<p class="empty">No $499.99 activations yet · webhook: checkout.session.completed</p>';
+
+      const matrix = monitor.controlMatrix ?? [];
+      el('matrix').innerHTML = matrix.map((row) => `
+        <tr>
+          <td>${row.name}</td>
+          <td><a href="${row.url}" target="_blank" rel="noreferrer">${row.endpoint}</a></td>
+          <td>${row.intent}</td>
+        </tr>
+      `).join('');
+
+      el('sidebar-foot').innerHTML = [
+        `Last sync<br><strong>${sys.updatedAt ? fmtDate(sys.updatedAt) : 'never'}</strong>`,
+        sys.lastPipelineMetro ? `<br>${sys.lastPipelineMetro}` : '',
+        sys.lastPipelineZip ? ` (${sys.lastPipelineZip})` : '',
+      ].join('');
+    }
+
+    async function load() {
+      el('error').hidden = true;
+      el('refresh').textContent = 'Refreshing…';
+      el('refresh').disabled = true;
+      try {
+        const [dashRes, healthRes] = await Promise.all([
+          fetch('/api/dashboard', fetchOpts),
+          fetch('/api/health', fetchOpts),
+        ]);
+        if (dashRes.status === 401) throw new Error('Session expired — reload /brain and sign in');
+        if (!dashRes.ok) throw new Error(`Dashboard HTTP ${dashRes.status}`);
+        const data = await dashRes.json();
+        const health = healthRes.ok ? await healthRes.json() : null;
+        render(data, health);
+      } catch (err) {
+        el('error').textContent = `Failed to load: ${err.message}`;
+        el('error').hidden = false;
+      } finally {
+        el('refresh').textContent = 'Refresh';
+        el('refresh').disabled = false;
+      }
+    }
+
+    el('refresh').addEventListener('click', load);
+    load();
+    setInterval(load, 60_000);
+  </script>
+</body>
+</html>

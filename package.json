@@ -1,12 +1,26 @@
 {
   "name": "ganesh-ai-brain",
-  "version": "1.0.0",
-  "description": "Ganesh Second Brain — hierarchical+parallel orchestration, subagents, MCP, visual pipelines",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ganesh Second Brain — Vercel/Supabase deployable telemetry brain plus hierarchical orchestration",
   "main": "src/ganeshOrchestrator.ts",
   "scripts": {
-    "test": "npx tsx test.ts"
+    "brain:ui:build": "npm install --prefix brain-server/ui && npm run build --prefix brain-server/ui",
+    "brain:ui:dev": "npm run dev --prefix brain-server/ui",
+    "build": "npm run brain:ui:build",
+    "start": "BRAIN_BUILD_ID=${BRAIN_BUILD_ID:-$(git rev-parse --short HEAD 2>/dev/null || echo dev)} node brain-server/index.mjs",
+    "dev": "node brain-server/index.mjs",
+    "test": "node --test 'lib/geo-pipeline/*.test.mjs' 'brain-server/test/*.test.mjs'",
+    "test:orchestrator": "npx tsx test.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.2.1",
+    "jose": "^6.2.4",
+    "stripe": "^22.2.1",
     "xstate": "^5.0.0"
   },
   "devDependencies": {

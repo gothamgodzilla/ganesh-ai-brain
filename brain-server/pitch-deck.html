@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ganesh.AI — Investor & Partner Deck</title>
+  <meta name="description" content="Ganesh.AI scouts local businesses, builds luxury preview portals, and ships live outreach — 3,200+ pitches, 3,400+ portals, autonomous B2B intelligence." />
+  <meta property="og:title" content="Ganesh.AI — Autonomous Luxury Business Intelligence" />
+  <meta property="og:description" content="Multi-agent pipeline: scout → build → deploy → pitch → convert. Live proof at ganesh.guru." />
+  <meta property="og:url" content="https://ganesh.guru/pitch" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0910;
+      --surface: #12111a;
+      --border: #2a2640;
+      --text: #f4f0ff;
+      --muted: #9d8ec4;
+      --accent: #a855f7;
+      --accent2: #6366f1;
+      --pink: #f472b6;
+      --gold: #fbbf24;
+      --success: #4ade80;
+      --slide-pad: clamp(1.5rem, 4vw, 4rem);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: "DM Sans", system-ui, sans-serif; }
+    body::before {
+      content: "";
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 45% at 15% 0%, rgba(99,102,241,.22), transparent 55%),
+        radial-gradient(ellipse 55% 40% at 85% 100%, rgba(168,85,247,.18), transparent 50%);
+    }
+    .deck { position: relative; z-index: 1; height: 100vh; overflow: hidden; }
+    .slides {
+      display: flex; height: 100%; transition: transform .55s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
+    }
+    .slide {
+      flex: 0 0 100%; height: 100vh; padding: var(--slide-pad);
+      display: flex; flex-direction: column; justify-content: center;
+      overflow-y: auto;
+    }
+    .eyebrow {
+      font-size: .72rem; letter-spacing: .24em; text-transform: uppercase;
+      color: var(--accent); margin: 0 0 .75rem; font-weight: 600;
+    }
+    h1, h2 {
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400; line-height: 1.05; margin: 0 0 1rem;
+    }
+    h1 { font-size: clamp(2.4rem, 6vw, 4.5rem); }
+    h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
+    .lead { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); max-width: 52ch; line-height: 1.6; margin: 0 0 1.5rem; }
+    .serif-italic { font-style: italic; color: var(--accent); }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .card {
+      background: rgba(18,17,26,.85); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.25rem; backdrop-filter: blur(8px);
+    }
+    .card h3 { margin: 0 0 .35rem; font-size: 1rem; font-weight: 600; }
+    .card p { margin: 0; font-size: .88rem; color: var(--muted); line-height: 1.5; }
+    .stat-num {
+      font-family: "Instrument Serif", serif;
+      font-size: clamp(2rem, 5vw, 3.2rem); color: var(--text); line-height: 1;
+    }
+    .stat-label { font-size: .78rem; color: var(--muted); margin-top: .35rem; text-transform: uppercase; letter-spacing: .08em; }
+    .funnel { display: flex; flex-direction: column; gap: .65rem; margin-top: 1.5rem; max-width: 640px; }
+    .funnel-row { display: grid; grid-template-columns: 140px 1fr 60px; align-items: center; gap: .75rem; font-size: .85rem; }
+    .funnel-bar { height: 10px; border-radius: 999px; background: var(--surface); overflow: hidden; }
+    .funnel-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--pink)); transition: width .8s ease; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .pill {
+      padding: .4rem .85rem; border-radius: 999px; font-size: .78rem; font-weight: 500;
+      background: rgba(168,85,247,.12); border: 1px solid rgba(168,85,247,.25); color: var(--accent);
+    }
+    .cta {
+      display: inline-flex; align-items: center; gap: .5rem;
+      margin-top: 1.5rem; padding: .85rem 1.4rem; border-radius: .75rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; text-decoration: none; font-weight: 600; font-size: .95rem;
+      box-shadow: 0 8px 32px rgba(168,85,247,.35);
+    }
+    .cta.secondary {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
+      box-shadow: none; margin-left: .75rem;
+    }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+    .before { border-color: rgba(248,113,113,.35); }
+    .after { border-color: rgba(74,222,128,.35); }
+    .module-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .85rem 1.25rem; background: rgba(10,9,16,.72); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(42,38,64,.6);
+    }
+    .logo { font-weight: 700; letter-spacing: .04em; font-size: .95rem; }
+    .logo span { color: var(--accent); }
+    .nav-hint { font-size: .72rem; color: var(--muted); }
+    .progress {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      padding: 1rem; background: rgba(10,9,16,.8); backdrop-filter: blur(12px);
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0;
+      background: var(--border); cursor: pointer; transition: .2s;
+    }
+    .dot.active { background: var(--accent); transform: scale(1.25); }
+    .arrow {
+      position: fixed; top: 50%; transform: translateY(-50%); z-index: 20;
+      width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border);
+      background: rgba(18,17,26,.9); color: var(--text); cursor: pointer; font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .arrow:hover { border-color: var(--accent); color: var(--accent); }
+    .arrow.prev { left: 1rem; }
+    .arrow.next { right: 1rem; }
+    .price-tag {
+      font-family: "Instrument Serif", serif;
+      font-size: clamp(2.5rem, 6vw, 4rem); color: var(--gold);
+    }
+    .strike { text-decoration: line-through; color: var(--muted); font-size: 1.2rem; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-size: .72rem; color: var(--success); margin-bottom: 1rem;
+    }
+    .live-badge::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success); animation: pulse 2s infinite;
+    }
+    .buy-row { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; margin-top: 1.25rem; }
+    .buy-col { flex: 1; min-width: 200px; }
+    .buy-label { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+    #stripe-buy-slot-pricing, #stripe-buy-slot-cta { min-height: 48px; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    @media print {
+      html, body { overflow: visible; height: auto; }
+      .deck { height: auto; }
+      .slides { flex-direction: column; transform: none !important; }
+      .slide { height: auto; min-height: 100vh; page-break-after: always; }
+      .topbar, .progress, .arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">Ganesh<span>.AI</span></div>
+    <div class="nav-hint">← → keys · swipe · click dots</div>
+  </header>
+
+  <div class="deck" id="deck">
+    <div class="slides" id="slides">
+
+      <!-- 1 Cover -->
+      <section class="slide" data-slide="0">
+        <p class="eyebrow">Investor & partner deck · 2026</p>
+        <h1>Autonomous luxury<br /><span class="serif-italic">business intelligence</span></h1>
+        <p class="lead">Ganesh.AI scouts legal local enterprises, builds bespoke preview portals, deploys to the edge, and ships personalized outreach — without a human sales team.</p>
+        <div class="pill-row">
+          <span class="pill">Multi-agent MCP</span>
+          <span class="pill">Live B2B pipeline</span>
+          <span class="pill">Stripe · Apple Pay</span>
+          <span class="pill">35+ AI modules</span>
+        </div>
+      </section>
+
+      <!-- 2 Problem -->
+      <section class="slide" data-slide="1">
+        <p class="eyebrow">The gap</p>
+        <h2>Great businesses.<br /><span class="serif-italic">Invisible online.</span></h2>
+        <p class="lead">Restaurants, salons, dispensaries, and gyms with 4.8★ reviews still run on 2012 templates, buried Google listings, and zero owned conversion surface.</p>
+        <div class="grid-2">
+          <div class="card before">
+            <h3>Before Ganesh.AI</h3>
+            <p>Generic Wix pages · no Apple Pay · reviews trapped on Google · booking@ inboxes · competitors win the click.</p>
+          </div>
+          <div class="card after">
+            <h3>After Ganesh.AI</h3>
+            <p>Luxury-owned portal · live Stripe checkout · AI copy from real reviews · executive email discovery · QR + trackable pitch.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 Platform -->
+      <section class="slide" data-slide="2">
+        <p class="eyebrow">What we built</p>
+        <h2>One engine.<br /><span class="serif-italic">Five autonomous agents.</span></h2>
+        <div class="grid-3">
+          <div class="card"><div class="module-icon">🔭</div><h3>Scout</h3><p>Playwright maps Google listings by ZIP, vertical, and metro — enriched with executive contact patterns.</p></div>
+          <div class="card"><div class="module-icon">✨</div><h3>Imagine</h3><p>Code-first luxury HTML/CSS + reference-first hero imagery from real listing photos.</p></div>
+          <div class="card"><div class="module-icon">🚀</div><h3>Deploy</h3><p>3,400+ routable preview slugs on <code style="color:var(--accent)">preview.ceo.slay.llc</code> with pre-deploy 404 gates.</p></div>
+          <div class="card"><div class="module-icon">✉️</div><h3>Outreach</h3><p>Before/after pitch emails via Resend — QR codes, cohort pricing, engagement beacons.</p></div>
+          <div class="card"><div class="module-icon">💳</div><h3>Convert</h3><p>Stripe Payment Links with <code>client_reference_id</code> attribution back to brain telemetry.</p></div>
+          <div class="card"><div class="module-icon">🧠</div><h3>Brain</h3><p>ganesh.guru hub — funnel, revenue, zip heatmaps, webhook ingest.</p></div>
+        </div>
+      </section>
+
+      <!-- 4 Live proof -->
+      <section class="slide" data-slide="3">
+        <div class="live-badge">Live pipeline metrics</div>
+        <p class="eyebrow">Proof of execution</p>
+        <h2>Not a prototype.<br /><span class="serif-italic">A running fleet.</span></h2>
+        <div class="grid-3" id="stats-grid">
+          <div class="card"><div class="stat-num" data-stat="siteVisitors">235</div><div class="stat-label">ganesh.guru visitors</div></div>
+          <div class="card"><div class="stat-num" data-stat="pitchesSent">3,225</div><div class="stat-label">live pitches sent</div></div>
+          <div class="card"><div class="stat-num" data-stat="previewPortals">3,409</div><div class="stat-label">luxury portals built</div></div>
+          <div class="card"><div class="stat-num" data-stat="previewVisits">—</div><div class="stat-label">preview visits tracked</div></div>
+          <div class="card"><div class="stat-num" data-stat="pipelineUsd">$1.6M</div><div class="stat-label">pipeline at $499</div></div>
+          <div class="card"><div class="stat-num" data-stat="modules">35+</div><div class="stat-label">AI modules shipped</div></div>
+        </div>
+      </section>
+
+      <!-- 5 Funnel -->
+      <section class="slide" data-slide="4">
+        <p class="eyebrow">Conversion funnel</p>
+        <h2>Scout → ship → <span class="serif-italic">collect.</span></h2>
+        <div class="funnel" id="funnel"></div>
+      </section>
+
+      <!-- 6 Modules -->
+      <section class="slide" data-slide="5">
+        <p class="eyebrow">Product depth</p>
+        <h2>35+ modules.<br /><span class="serif-italic">One luxury stack.</span></h2>
+        <div class="grid-2">
+          <div class="card"><h3>💬 Support</h3><p>Smart chatbots, multilingual pages, voice search, auto-booking — 70% of inbound deflected.</p></div>
+          <div class="card"><h3>🛒 Sales</h3><p>Exit-intent offers, cart recovery, dynamic pricing, lead scoring, social proof at checkout.</p></div>
+          <div class="card"><h3>✍️ Content</h3><p>SEO copy, custom imagery, video summaries, headline A/B, AI blog, social cross-post.</p></div>
+          <div class="card"><h3>🔍 SEO</h3><p>Keyword research, schema markup, competitor audits, localized copy, internal linking engine.</p></div>
+          <div class="card"><h3>📊 Analytics</h3><p>Predictive heatmaps, image compression, fraud filters, WCAG accessibility auto-fix.</p></div>
+          <div class="card"><h3>👑 Premium</h3><p>Loyalty VIP, inventory guardian, weekly AI coach, campaign builder, reputation shield.</p></div>
+        </div>
+      </section>
+
+      <!-- 7 Verticals -->
+      <section class="slide" data-slide="6">
+        <p class="eyebrow">Market focus</p>
+        <h2>Six verticals.<br /><span class="serif-italic">Metro sweeps.</span></h2>
+        <p class="lead">Batch pipeline runs across Beverly Hills, Seattle, Las Vegas, Boston, NYC, Long Beach — ZIP-anchored with Zippopotam metro expansion.</p>
+        <div class="pill-row" id="verticals">
+          <span class="pill">🍽 restaurant</span>
+          <span class="pill">🍸 bar</span>
+          <span class="pill">💇 salon</span>
+          <span class="pill">🌿 dispensary</span>
+          <span class="pill">🏋️ gym</span>
+          <span class="pill">🚗 auto</span>
+        </div>
+        <div class="grid-3" style="margin-top:2rem" id="metros"></div>
+      </section>
+
+      <!-- 8 Differentiator -->
+      <section class="slide" data-slide="7">
+        <p class="eyebrow">Why Ganesh.AI wins</p>
+        <h2>Show, don't <span class="serif-italic">tell.</span></h2>
+        <div class="grid-2">
+          <div class="card"><h3>Before/after pitch</h3><p>Every email ships a live preview URL built from their real Google listing — not a generic template.</p></div>
+          <div class="card"><h3>Executive email discovery</h3><p>Contact enrichment ranks owner@ and first-name patterns over booking@ noise.</p></div>
+          <div class="card"><h3>Edge preview hub</h3><p>3,400+ deployed slugs with visit beacons, QR codes, and Vercel smoke gates.</p></div>
+          <div class="card"><h3>Attribution-native checkout</h3><p>Stripe <code>client_reference_id</code> ties every payment to businessId + tier in brain telemetry.</p></div>
+        </div>
+      </section>
+
+      <!-- 9 Business model -->
+      <section class="slide" data-slide="8">
+        <p class="eyebrow">Revenue model</p>
+        <h2>$499 cohort.<br /><span class="serif-italic">$1,499 standard.</span></h2>
+        <p class="lead">First 20 businesses per metro get founder pricing. Stripe-hosted checkout with Apple Pay — frictionless close on mobile.</p>
+        <div class="card" style="max-width:420px;margin-top:1.5rem">
+          <p class="strike">$1,499 standard</p>
+          <div class="price-tag">$499</div>
+          <p style="color:var(--muted);margin:.5rem 0 0">Founding cohort · full Premium stack · live portal + outreach kit</p>
+        </div>
+        <div class="buy-row">
+          <div class="buy-col">
+            <p class="buy-label">$499 founding cohort</p>
+            <a class="cta" id="cta-checkout" href="https://buy.stripe.com/aFaeVc2FZaNla1ScJd8bS00" target="_blank" rel="noreferrer">Start $499 checkout →</a>
+          </div>
+          <div class="buy-col">
+            <p class="buy-label">$1,499 standard · Apple Pay</p>
+            <div id="stripe-buy-slot-pricing"></div>
+          </div>
+        </div>
+        <a class="cta secondary" id="cta-preview" href="https://preview.ceo.slay.llc" target="_blank" rel="noreferrer" style="margin-top:1rem;margin-left:0">Browse live portals</a>
+      </section>
+
+      <!-- 10 Architecture -->
+      <section class="slide" data-slide="9">
+        <p class="eyebrow">Architecture</p>
+        <h2>Monitor control <span class="serif-italic">matrix.</span></h2>
+        <div class="grid-2">
+          <div class="card"><h3>GaneshAI Brain</h3><p><code>ganesh.guru</code> — revenue dashboard, funnel, zip heatmap, token-gated ops UI.</p></div>
+          <div class="card"><h3>Live telemetry pipe</h3><p><code>/api/v1/stripe/webhook</code> — checkout.session.completed → conversion registry.</p></div>
+          <div class="card"><h3>Frictionless gate</h3><p><code>buy.stripe.com/...Jd8bS00</code> — Apple Pay enabled live Payment Link.</p></div>
+          <div class="card"><h3>Engagement layer</h3><p>Resend opens/clicks + preview visit beacons → <code>/api/v1/track/preview</code>.</p></div>
+        </div>
+      </section>
+
+      <!-- 11 Traction ask -->
+      <section class="slide" data-slide="10">
+        <p class="eyebrow">The ask</p>
+        <h2>235 visitors.<br /><span class="serif-italic">Zero friction to yes.</span></h2>
+        <p class="lead">You're on ganesh.guru because the pipeline is real. Partner with us to white-label metro sweeps, fund the next 10 ZIP anchors, or acquire the engine.</p>
+        <div class="grid-2">
+          <div class="card"><h3>For agencies</h3><p>White-label the scout → portal → pitch loop. We ship; you close retainers.</p></div>
+          <div class="card"><h3>For investors</h3><p>Proven outbound at scale · Stripe-native monetization · MCP-first agent architecture.</p></div>
+          <div class="card"><h3>For operators</h3><p>One $499 checkout → luxury portal, AI modules, and ongoing brain telemetry.</p></div>
+          <div class="card"><h3>For press</h3><p>3,200+ personalized pitches with live before/after URLs — ask for a demo slug.</p></div>
+        </div>
+      </section>
+
+      <!-- 12 CTA -->
+      <section class="slide" data-slide="11">
+        <p class="eyebrow">Next step</p>
+        <h1>Let's <span class="serif-italic">ship.</span></h1>
+        <p class="lead">Book a walkthrough, pick a live preview portal, or close the founding cohort today.</p>
+        <div class="buy-row">
+          <div class="buy-col">
+            <p class="buy-label">Close today</p>
+            <div id="stripe-buy-slot-cta"></div>
+          </div>
+          <div class="buy-col">
+            <p class="buy-label">Partnership</p>
+            <a class="cta" href="mailto:Bae@slay.llc?subject=Ganesh.AI%20Partnership" style="margin-top:0">Bae@slay.llc →</a>
+            <a class="cta secondary" href="https://preview.ceo.slay.llc" target="_blank" rel="noreferrer" style="margin-top:.75rem;margin-left:0">See live previews</a>
+          </div>
+        </div>
+        <p style="margin-top:2rem;font-size:.8rem;color:var(--muted)">Ops dashboard: <a href="/brain" style="color:var(--accent)">ganesh.guru/brain</a> (authorized)</p>
+      </section>
+
+    </div>
+  </div>
+
+  <button class="arrow prev" id="prev" aria-label="Previous slide">‹</button>
+  <button class="arrow next" id="next" aria-label="Next slide">›</button>
+  <nav class="progress" id="progress" aria-label="Slide navigation"></nav>
+
+  <script>
+    const slides = document.getElementById('slides');
+    const progress = document.getElementById('progress');
+    const total = document.querySelectorAll('.slide').length;
+    let current = 0;
+    let touchStartX = 0;
+
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Slide ${i + 1}`);
+      dot.addEventListener('click', () => go(i));
+      progress.appendChild(dot);
+    }
+
+    function go(n) {
+      current = Math.max(0, Math.min(total - 1, n));
+      slides.style.transform = `translateX(-${current * 100}%)`;
+      progress.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    }
+
+    document.getElementById('prev').addEventListener('click', () => go(current - 1));
+    document.getElementById('next').addEventListener('click', () => go(current + 1));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(current + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+      if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      }
+    });
+
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) go(current + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+
+    function fmt(n) {
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return n.toLocaleString();
+      return String(n);
+    }
+
+    function fmtUsd(n) {
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+      return '$' + n.toLocaleString();
+    }
+
+    function ensureBuyButtonScript() {
+      if (document.querySelector('script[src*="buy-button.js"]')) return;
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://js.stripe.com/v3/buy-button.js';
+      document.head.appendChild(s);
+    }
+
+    function mountBuyButton(slotId, cfg) {
+      if (!cfg?.id || !cfg?.publishableKey) return;
+      const slot = document.getElementById(slotId);
+      if (!slot || slot.querySelector('stripe-buy-button')) return;
+      ensureBuyButtonScript();
+      const btn = document.createElement('stripe-buy-button');
+      btn.setAttribute('buy-button-id', cfg.id);
+      btn.setAttribute('publishable-key', cfg.publishableKey);
+      slot.appendChild(btn);
+    }
+
+    async function hydrate() {
+      try {
+        const res = await fetch('/api/v1/pitch/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        const p = data.proof ?? {};
+
+        document.querySelectorAll('[data-stat]').forEach((el) => {
+          const key = el.dataset.stat;
+          let val = p[key] ?? data[key];
+          if (key === 'pipelineUsd' && p.pipelineUsd) val = fmtUsd(p.pipelineUsd);
+          else if (key === 'modules') val = (data.modules ?? 35) + '+';
+          else if (typeof val === 'number') val = fmt(val);
+          if (val != null) el.textContent = val;
+        });
+
+        const funnel = document.getElementById('funnel');
+        const items = data.funnel ?? [];
+        const max = Math.max(...items.map((f) => f.count), 1);
+        funnel.innerHTML = items.map((f) => `
+          <div class="funnel-row">
+            <span>${f.label}</span>
+            <div class="funnel-bar"><div class="funnel-fill" style="width:${Math.round((f.count / max) * 100)}%"></div></div>
+            <span style="text-align:right;color:var(--accent)">${fmt(f.count)}</span>
+          </div>
+        `).join('');
+
+        const metros = document.getElementById('metros');
+        const zips = data.metros ?? [];
+        const labels = { '90210': 'Beverly Hills', '98101': 'Seattle', '89101': 'Las Vegas', '02108': 'Boston', '10011': 'NYC', '90802': 'Long Beach' };
+        metros.innerHTML = zips.slice(0, 6).map((z) => `
+          <div class="card"><h3>${labels[z] ?? z}</h3><p>ZIP ${z} · metro sweep live</p></div>
+        `).join('');
+
+        if (data.links?.checkout) document.getElementById('cta-checkout').href = data.links.checkout;
+        if (data.links?.previewHub) document.getElementById('cta-preview').href = data.links.previewHub;
+        if (data.stripeBuyButton) {
+          mountBuyButton('stripe-buy-slot-pricing', data.stripeBuyButton);
+          mountBuyButton('stripe-buy-slot-cta', data.stripeBuyButton);
+        }
+      } catch {
+        mountBuyButton('stripe-buy-slot-pricing', {
+          id: 'buy_btn_1TkFPWAxzA1LgWEjw3sfVVWP',
+          publishableKey: 'pk_live_51Sj5vwAxzA1LgWEjmjO2mcx6JeDMe109m8hYAFOJtNFAhmaBZSEOt62C4h7WzBl1lLoXQAMDofmtM6dDOAW3oi8100QCMuC4nq',
+        });
+        mountBuyButton('stripe-buy-slot-cta', {
+          id: 'buy_btn_1TkFPWAxzA1LgWEjw3sfVVWP',
+          publishableKey: 'pk_live_51Sj5vwAxzA1LgWEjmjO2mcx6JeDMe109m8hYAFOJtNFAhmaBZSEOt62C4h7WzBl1lLoXQAMDofmtM6dDOAW3oi8100QCMuC4nq',
+        });
+      }
+    }
+
+    hydrate();
+  </script>
+  <script type="module">
+    import { injectSpeedInsights } from 'https://esm.run/@vercel/speed-insights@2';
+    injectSpeedInsights();
+  </script>
+</body>
+</html>

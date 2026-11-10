@@ -1,0 +1,299 @@
+{
+  "run_id": "ganesh-go-06076-2026-07-21",
+  "invoked_as": "ganesh:go pipeline:luxury-mcp-builder superclaude Zip:06076 --all cafe --all restaurant",
+  "goal": "Ganesh Brain public-data scout \u2192 luxury lead inventory for home ZIP (06076 Stafford Springs CT)",
+  "serves_master_goal": "Revenue + reviews via ideal-customer acquisition for SLAY luxury outreach",
+  "timestamp_utc": "2026-07-22T03:25:42.192266+00:00",
+  "zip": "06076",
+  "place": "Stafford / Stafford Springs, CT",
+  "verticals": [
+    "cafe",
+    "restaurant"
+  ],
+  "mode": "all",
+  "ship": false,
+  "outreach": false,
+  "counts": {
+    "cafe": 5,
+    "restaurant": 11,
+    "total": 16
+  },
+  "pipeline_status": {
+    "divine_ganesh_worker": {
+      "url": "https://divine-ganesh-one.divine-ganesh-one.workers.dev",
+      "version": "1.4",
+      "routes": [
+        "/scout",
+        "/deploy",
+        "/send-email",
+        "/vercel-deploy",
+        "/pipeline",
+        "/bypass"
+      ],
+      "scout_auth": "401 Unauthorized \u2014 WORKER_API_SECRET missing from secrets.env",
+      "pass": false
+    },
+    "luxury_mcp_engine_vercel": {
+      "project": "luxury-mcp-engine",
+      "status": "Error (last prod deploy ~20h ago)",
+      "pass": false
+    },
+    "ganesh_guru_brain": {
+      "url": "https://ganesh.guru",
+      "status": "404 / app not live",
+      "repo": "gothamgodzilla/ganesh-ai-brain (brain-server only on disk)",
+      "pass": false
+    },
+    "local_engine_cli": {
+      "expected": "npm run pipeline:full -- --zip 06076 (per .env.example)",
+      "found": "NOT on swagger \u2014 only .env.example + brain dashboard in ganesh-ai-brain",
+      "pass": false
+    },
+    "public_data_fallback_scout": {
+      "sources": [
+        "OpenStreetMap Overpass ODbL",
+        "Nominatim",
+        "Tripadvisor public list",
+        "brand/official sites"
+      ],
+      "pass": true,
+      "note": "Lawful public data only; no cold email sent"
+    },
+    "secrets_gap": [
+      "WORKER_API_SECRET",
+      "GOOGLE_PLACES_API_KEY",
+      "BRAIN_SYNC_SECRET",
+      "DASHBOARD_VIEW_TOKEN",
+      "full luxury-mcp-engine source tree"
+    ]
+  },
+  "businesses": [
+    {
+      "name": "Stafford Coffee Company",
+      "vertical": "cafe",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "4.1 Tripadvisor (8)",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Luann's Bakery & Cafe",
+      "vertical": "cafe",
+      "address": "Main Street, Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "lat": 41.9533221,
+      "lon": -72.304905,
+      "sources": [
+        "osm",
+        "nominatim"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Dunkin'",
+      "vertical": "cafe",
+      "address": "22 West Stafford Road, Stafford Springs, CT 06076",
+      "phone": "+1 860-684-7557",
+      "website": "https://locations.dunkindonuts.com/en/ct/stafford-springs/22-w-stafford-rd/335460",
+      "lat": 41.9640997,
+      "lon": -72.3187243,
+      "sources": [
+        "osm",
+        "brand-site"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Lake View Cafe",
+      "vertical": "cafe",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "1.0 Tripadvisor (1) \u2014 verify open",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "verify-open"
+    },
+    {
+      "name": "Mill Pond Country Store",
+      "vertical": "cafe",
+      "address": "East Street / Hydeville, Staffordville, CT 06076",
+      "phone": null,
+      "website": null,
+      "lat": 41.9847427,
+      "lon": -72.2896957,
+      "rating_hint": "4.8 Tripadvisor (6) \u2014 breakfast/coffee stop",
+      "sources": [
+        "tripadvisor",
+        "nominatim"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Basil's",
+      "vertical": "restaurant",
+      "cuisine": "Italian/American",
+      "address": "West Stafford Road, Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "lat": 41.9652355,
+      "lon": -72.3274153,
+      "rating_hint": "4.4 Tripadvisor (192) \u2014 #1",
+      "sources": [
+        "tripadvisor",
+        "osm",
+        "nominatim"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Four Seasons by the Lake",
+      "vertical": "restaurant",
+      "cuisine": "American/bar",
+      "address": "51 Old Springfield Rd, Stafford Springs, CT 06076",
+      "phone": "(860) 851-9445",
+      "website": "https://fourseasonsstafford.com/",
+      "rating_hint": "4.1 Tripadvisor (11)",
+      "sources": [
+        "tripadvisor",
+        "official-site"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Hang's Asian Bistro",
+      "vertical": "restaurant",
+      "cuisine": "Chinese/Asian",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "4.7 Tripadvisor (3)",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Kolosos Family Restaurant",
+      "vertical": "restaurant",
+      "cuisine": "Italian/American/Pizza",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "4.0 Tripadvisor (4)",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Stafford House of Pizza",
+      "vertical": "restaurant",
+      "cuisine": "Pizza/Italian",
+      "address": "19 Main St, Stafford Springs, CT 06076",
+      "phone": "(860) 684-6331",
+      "website": "https://staffordhousepizza.com/",
+      "lat": 41.9536525,
+      "lon": -72.3040786,
+      "rating_hint": "3.3 Tripadvisor (26)",
+      "sources": [
+        "tripadvisor",
+        "osm",
+        "official-site"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Ocean Asian Restaurant",
+      "vertical": "restaurant",
+      "cuisine": "Asian",
+      "address": "Main Street, Stafford Springs, CT 06076",
+      "phone": "+1-860-684-4262",
+      "website": null,
+      "lat": 41.9536225,
+      "lon": -72.3045179,
+      "sources": [
+        "osm",
+        "nominatim"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "J&D Pub and Grill",
+      "vertical": "restaurant",
+      "cuisine": "Pub/American",
+      "address": "Main Street, Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "lat": 41.953387,
+      "lon": -72.3063655,
+      "sources": [
+        "osm",
+        "nominatim"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Subway",
+      "vertical": "restaurant",
+      "cuisine": "Sandwiches",
+      "address": "88 West Stafford Road, Stafford Springs, CT 06076",
+      "phone": "+1 860-684-6840",
+      "website": "https://restaurants.subway.com/united-states/ct/stafford-springs/88-w-stafford-rd",
+      "lat": 41.9691087,
+      "lon": -72.3317119,
+      "sources": [
+        "osm",
+        "brand-site",
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "McDonald's",
+      "vertical": "restaurant",
+      "cuisine": "Fast food",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "2.2 Tripadvisor (9)",
+      "sources": [
+        "osm",
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Domino's Pizza",
+      "vertical": "restaurant",
+      "cuisine": "Pizza",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "1.0 Tripadvisor (1)",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "listed"
+    },
+    {
+      "name": "Ice Cream Depot",
+      "vertical": "restaurant",
+      "cuisine": "Dessert",
+      "address": "Stafford Springs, CT 06076",
+      "phone": null,
+      "website": null,
+      "rating_hint": "4.8 Tripadvisor (16) \u2014 dessert, not full restaurant",
+      "sources": [
+        "tripadvisor"
+      ],
+      "status": "adjacent"
+    }
+  ]
+}
