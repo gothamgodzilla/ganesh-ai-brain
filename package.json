@@ -1,30 +1,34 @@
 {
   "name": "ganesh-ai-brain",
   "version": "2.0.0",
-  "private": true,
   "type": "module",
-  "description": "Ganesh Second Brain — Vercel/Supabase deployable telemetry brain plus hierarchical orchestration",
-  "main": "src/ganeshOrchestrator.ts",
+  "description": "Ganesh AI Brain — Multi-Agent Orchestrator, Role Stack Pipeline, Watchdog & B2B Telemetry Core",
+  "main": "brain-server/index.mjs",
   "scripts": {
-    "brain:ui:build": "npm install --prefix brain-server/ui && npm run build --prefix brain-server/ui",
-    "brain:ui:dev": "npm run dev --prefix brain-server/ui",
-    "build": "npm run brain:ui:build",
-    "start": "BRAIN_BUILD_ID=${BRAIN_BUILD_ID:-$(git rev-parse --short HEAD 2>/dev/null || echo dev)} node brain-server/index.mjs",
+    "start": "node brain-server/index.mjs",
     "dev": "node brain-server/index.mjs",
+    "brain:ui:build": "npm install --prefix brain-server/ui && npm run build --prefix brain-server/ui",
+    "build": "npm run brain:ui:build",
     "test": "node --test 'lib/geo-pipeline/*.test.mjs' 'brain-server/test/*.test.mjs'",
-    "test:orchestrator": "npx tsx test.ts"
+    "test:orchestrator": "npx tsx test.ts",
+    "verify": "node scripts/verify-generation.mjs",
+    "verify:fast": "node scripts/verify-generation.mjs --fast",
+    "watchdog:run": "node scripts/run-watchdog.mjs",
+    "prepare": "node scripts/install-hooks.mjs",
+    "mcp:onyx-lynx": "npm --prefix onyx-lynx-mcp-server start"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.117.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "@supabase/supabase-js": "^2.103.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "jose": "^6.2.4",
     "stripe": "^22.2.1",
     "xstate": "^5.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.0"
   }
 }

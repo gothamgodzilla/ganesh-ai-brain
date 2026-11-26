@@ -2,17 +2,20 @@ import crypto from 'node:crypto';
 import { safeEqual } from './timing-safe.mjs';
 import { recordAuthFailure } from './rate-limit.mjs';
 
-const DASHBOARD_VIEW_TOKEN =
-  process.env.DASHBOARD_VIEW_TOKEN?.trim() ||
-  process.env.BRAIN_DASHBOARD_TOKEN?.trim() ||
-  '';
+function getDashboardViewToken() {
+  return (
+    process.env.DASHBOARD_VIEW_TOKEN?.trim() ||
+    process.env.BRAIN_DASHBOARD_TOKEN?.trim() ||
+    ''
+  );
+}
 
 export const DASHBOARD_COOKIE = 'ganesh_brain_session';
 const SESSION_MAX_AGE_SEC = 60 * 60 * 8;
 const SESSION_VERSION = 'v1';
 
 export function dashboardAuthConfigured() {
-  return Boolean(DASHBOARD_VIEW_TOKEN);
+  return Boolean(getDashboardViewToken());
 }
 
 function parseCookies(req) {
@@ -41,12 +44,12 @@ function requestIsSecure(req) {
 
 function sessionSigningKey() {
   // Derived from the view token; never write the raw token into the cookie.
-  return crypto.createHmac('sha256', 'ganesh-brain-session').update(DASHBOARD_VIEW_TOKEN).digest();
+  return crypto.createHmac('sha256', 'ganesh-brain-session').update(getDashboardViewToken()).digest();
 }
 
 /** Opaque session: v1.<expUnix>.<hmac> — HMAC over `${SESSION_VERSION}.${exp}` */
 export function mintDashboardSession(nowSec = Math.floor(Date.now() / 1000)) {
-  if (!DASHBOARD_VIEW_TOKEN) return null;
+  if (!getDashboardViewToken()) return null;
   const exp = nowSec + SESSION_MAX_AGE_SEC;
   const payload = `${SESSION_VERSION}.${exp}`;
   const sig = crypto.createHmac('sha256', sessionSigningKey()).update(payload).digest('base64url');
@@ -54,7 +57,7 @@ export function mintDashboardSession(nowSec = Math.floor(Date.now() / 1000)) {
 }
 
 export function verifyDashboardSession(session) {
-  if (!DASHBOARD_VIEW_TOKEN || typeof session !== 'string') return false;
+  if (!getDashboardViewToken() || typeof session !== 'string') return false;
   const parts = session.trim().split('.');
   if (parts.length !== 3) return false;
   const [ver, expStr, sig] = parts;
@@ -90,12 +93,14 @@ export function extractDashboardToken(req) {
 }
 
 export function authenticateDashboardCredential(token) {
-  if (!DASHBOARD_VIEW_TOKEN || typeof token !== 'string' || !token.trim()) return false;
-  return safeEqual(token.trim(), DASHBOARD_VIEW_TOKEN);
+  const expected = getDashboardViewToken();
+  if (!expected || typeof token !== 'string' || !token.trim()) return false;
+  return safeEqual(token.trim(), expected);
 }
 
 export function verifyDashboardAccess(req) {
-  if (!DASHBOARD_VIEW_TOKEN) {
+  const expected = getDashboardViewToken();
+  if (!expected) {
     return {
       ok: false,
       status: 503,
@@ -115,7 +120,7 @@ export function verifyDashboardAccess(req) {
     return { ok: true };
   }
 
-  if (!safeEqual(cred.value, DASHBOARD_VIEW_TOKEN)) {
+  if (!safeEqual(cred.value, expected)) {
     return { ok: false, status: 401, error: 'Unauthorized' };
   }
   return { ok: true };
@@ -141,11 +146,12 @@ export function clearDashboardSessionCookie(res, req) {
 export function tryMigrateQueryToken(req, res) {
   const query = req.query?.token;
   if (typeof query !== 'string' || !query.trim()) return false;
-  if (!DASHBOARD_VIEW_TOKEN) {
+  const expected = getDashboardViewToken();
+  if (!expected) {
     res.redirect(303, req.path);
     return true;
   }
-  if (safeEqual(query.trim(), DASHBOARD_VIEW_TOKEN)) {
+  if (safeEqual(query.trim(), expected)) {
     setDashboardSessionCookie(res, req);
     res.redirect(303, req.path);
     return true;
