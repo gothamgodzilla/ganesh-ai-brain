@@ -10,7 +10,7 @@ function fmtMoney(n) {
 
 function fmtDate(iso) {
   try {
-    return new Date(iso).toLocaleString();
+    return iso ? new Date(iso).toLocaleString() : '—';
   } catch {
     return iso ?? '—';
   }
@@ -25,34 +25,53 @@ function heatClass(value, max) {
   return 'bg-obsidian-800 border border-obsidian-700/50';
 }
 
+function verdictBadgeClass(verdict) {
+  const v = String(verdict ?? '').toUpperCase();
+  if (v === 'PASS' || v === 'APPROVE' || v === 'OPTIMIZED' || v === 'BLUEPRINT_READY') {
+    return 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+  }
+  if (v === 'BLOCK' || v === 'REJECT') {
+    return 'bg-rose-500/15 text-rose-300 border border-rose-500/30';
+  }
+  return 'bg-amber-500/15 text-amber-300 border border-amber-500/30';
+}
+
 export default function GaneshGuruConsole({ payload, health, onRefresh, loading }) {
   const [activeNav, setActiveNav] = useState(0);
 
   const data = useMemo(() => {
     const sys = payload?.system ?? {};
     const rev = payload?.revenue ?? {};
-    const monitor = payload?.monitor ?? {};
+    const conv = payload?.conversions ?? {};
+    const monitor = payload?.monitor ?? payload?.matrix ?? {};
     const funnel = monitor.funnel ?? [];
     const funnelMap = Object.fromEntries(funnel.map((f) => [f.stage, f]));
+    const orchestrator = payload?.orchestrator ?? {};
+    const watchdog = payload?.watchdog ?? {};
 
     return {
       previewSlugs: sys.previewSlugs ?? 0,
       contacted: sys.contacted ?? 0,
       scouted: sys.scoutedListings ?? funnelMap.scouted?.count ?? sys.previewSlugs ?? 0,
       portalsOpened: sys.portalsOpened ?? funnelMap.opened?.count ?? 0,
-      conversions: funnelMap.conversions?.count ?? rev.paymentCount ?? 0,
+      conversions: funnelMap.conversions?.count ?? rev.paymentCount ?? conv.paidOrCompleteCount ?? 0,
       conversionRate: `${(rev.conversionRate ?? 0).toFixed(2)}%`,
-      totalRevenue: rev.totalRevenue ?? 0,
+      totalRevenue: rev.totalRevenue ?? conv.revenueUsdApprox ?? 0,
       todayRevenue: rev.todayRevenue ?? 0,
       funnel,
-      zipHeatmap: monitor.zipHeatmap ?? [],
+      zipHeatmap: monitor.zipHeatmap ?? sys.zipHeatmap ?? [],
       recentOutreach: sys.recentOutreach ?? [],
       recentSessions: monitor.recentSessions ?? [],
-      recentPayments: rev.recentPayments ?? [],
+      recentPayments: rev.recentPayments ?? conv.recent ?? [],
       links: payload?.links ?? {},
-      updatedAt: sys.updatedAt,
+      updatedAt: sys.updatedAt ?? sys.syncedAt ?? payload?.updatedAt,
       lastMetro: sys.lastPipelineMetro,
       lastZip: sys.lastPipelineZip,
+      roleTelemetry: orchestrator.telemetry ?? [],
+      rolePrompts: orchestrator.roles ?? [],
+      alerts: orchestrator.alerts ?? [],
+      watchdogLatest: watchdog.latestRun ?? null,
+      watchdogProperties: watchdog.properties ?? [],
       health,
     };
   }, [payload, health]);
@@ -361,6 +380,135 @@ export default function GaneshGuruConsole({ payload, health, onRefresh, loading 
               </tbody>
             </table>
           </section>
+        )}
+
+        {(activeNav === 0 || activeNav === 4) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section className="bg-obsidian-800 border border-obsidian-700 rounded-2xl p-6 overflow-x-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  Orchestrator Role Stack Telemetry
+                </h3>
+                <span className="text-xs font-mono text-amethyst-400">
+                  Architect · Operator · Contrarian
+                </span>
+              </div>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-slate-500 uppercase tracking-wider">
+                    <th className="pb-2">Role</th>
+                    <th className="pb-2">Pass</th>
+                    <th className="pb-2">Verdict</th>
+                    <th className="pb-2">Latency</th>
+                    <th className="pb-2">Summary</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.roleTelemetry.length
+                    ? data.roleTelemetry.slice(0, 12)
+                    : [
+                        {
+                          id: 'empty',
+                          role: 'Architect / Operator / Contrarian',
+                          pass: 1,
+                          verdict: 'STANDBY',
+                          latencyMs: 0,
+                          summary: 'POST /api/orchestrator/pipeline to record role stack telemetry',
+                        },
+                      ]
+                  ).map((rt, idx) => (
+                    <tr key={rt.id ?? idx} className="border-t border-obsidian-700">
+                      <td className="py-2 font-mono text-amethyst-300">{rt.role}</td>
+                      <td className="py-2 font-mono">#{rt.pass ?? 1}</td>
+                      <td className="py-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${verdictBadgeClass(rt.verdict)}`}>
+                          {rt.verdict}
+                        </span>
+                      </td>
+                      <td className="py-2 font-mono text-slate-400">{rt.latencyMs ?? 0}ms</td>
+                      <td className="py-2 text-slate-300 truncate max-w-[220px]" title={rt.summary}>
+                        {rt.summary ?? '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="bg-obsidian-800 border border-obsidian-700 rounded-2xl p-6 overflow-x-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  Autonomous Watchdog & Alert Feed
+                </h3>
+                <span className="text-xs font-mono text-electric-pink">
+                  {data.watchdogProperties.length || 10} Properties Monitored
+                </span>
+              </div>
+              {data.alerts.length > 0 && (
+                <div className="mb-4 space-y-1.5">
+                  {data.alerts.slice(0, 4).map((alert, idx) => (
+                    <div
+                      key={alert.id ?? idx}
+                      className="text-xs px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex justify-between gap-2"
+                    >
+                      <span className="font-mono font-semibold">{alert.domain}</span>
+                      <span className="flex-1 truncate">{alert.message}</span>
+                      <span className="uppercase text-[10px]">{alert.kind}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-slate-500 uppercase tracking-wider">
+                    <th className="pb-2">Property</th>
+                    <th className="pb-2">Status</th>
+                    <th className="pb-2">HTTP</th>
+                    <th className="pb-2">TLS Cert</th>
+                    <th className="pb-2">Domain RDAP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.watchdogLatest?.results?.length
+                    ? data.watchdogLatest.results
+                    : data.watchdogProperties.map((p) => ({
+                        domain: p.domain,
+                        status: 'pending',
+                        http: { latencyMs: null },
+                        tls: { daysRemaining: null },
+                        rdap: { daysRemaining: null },
+                      }))
+                  ).map((row) => (
+                    <tr key={row.domain} className="border-t border-obsidian-700">
+                      <td className="py-2 font-mono text-white">{row.domain}</td>
+                      <td className="py-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            row.status === 'healthy'
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              : row.status === 'down'
+                                ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="py-2 font-mono text-slate-400">
+                        {row.http?.latencyMs != null ? `${row.http.latencyMs}ms` : '—'}
+                      </td>
+                      <td className="py-2 font-mono text-slate-400">
+                        {row.tls?.daysRemaining != null ? `${row.tls.daysRemaining}d` : '—'}
+                      </td>
+                      <td className="py-2 font-mono text-slate-400">
+                        {row.rdap?.daysRemaining != null ? `${row.rdap.daysRemaining}d` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </div>
         )}
 
         {activeNav === 4 && (

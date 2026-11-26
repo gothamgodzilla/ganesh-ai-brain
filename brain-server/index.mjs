@@ -13,11 +13,31 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { getEngagementStats, getTopEngaged } = require('../lib/engagement-registry.cjs');
-import { getSystemSnapshot, saveSystemSnapshot, listConversions } from './store.mjs';
-import { BRAIN_HUB_URL, MONITOR_CONTROL_MATRIX, STRIPE_PAYMENT_LINK, STRIPE_WEBHOOK_PATH } from './monitor-matrix.mjs';
+import {
+  getSystemSnapshot,
+  saveSystemSnapshot,
+  listConversions,
+  addRoleTelemetry,
+  listRoleTelemetry,
+  getLatestWatchdogRun,
+  listWatchdogRuns,
+  pushOrchestratorAlerts,
+  listOrchestratorAlerts,
+} from './store.mjs';
+import {
+  BRAIN_HUB_URL,
+  MONITOR_CONTROL_MATRIX,
+  STRIPE_PAYMENT_LINK,
+  STRIPE_WEBHOOK_PATH,
+} from './monitor-matrix.mjs';
 import { safeEqual } from './timing-safe.mjs';
 import { validateSyncPayload } from './sync-validate.mjs';
-import { createRateLimiter, checkAuthRateLimit, recordAuthFailure, clearAuthFailures } from './rate-limit.mjs';
+import {
+  createRateLimiter,
+  checkAuthRateLimit,
+  recordAuthFailure,
+  clearAuthFailures,
+} from './rate-limit.mjs';
 import {
   dashboardAuthConfigured,
   verifyDashboardAccess,
@@ -32,6 +52,13 @@ import {
   authenticateDashboardCredential,
 } from './dashboard-auth.mjs';
 import { handlePublicPitchStats } from './pitch-stats.mjs';
+import {
+  runRoleStackPipeline,
+  runDecisionReview,
+  listRolePrompts,
+} from '../lib/role-pipeline/index.mjs';
+import { runInfrastructureWatchdog } from './watchdog.mjs';
+import { getWatchdogConfig } from './watchdog-config.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const CONSOLE_DIST = join(ROOT, 'console-dist');
@@ -127,7 +154,7 @@ function serveDashboard(_req, res) {
   res.type('html').send(readFileSync(path, 'utf8'));
 }
 
-function dashboardGate(req, res, next) {
+function requireDashboardAuth(req, res, next) {
   if (isDashboardHtmlRoute(req) && req.query?.token) {
     if (!checkAuthRateLimit(req, res)) return;
     if (tryMigrateQueryToken(req, res)) return;
@@ -138,10 +165,45 @@ function dashboardGate(req, res, next) {
       denyDashboard(res, req, 503, NOT_CONFIGURED_HTML);
       return;
     }
-    denyDashboard(res, req);
+    if (isDashboardHtmlRoute(req) || wantsHtml(req)) {
+      denyDashboard(res, req);
+      return;
+    }
+    res.status(401).json({ error: 'Unauthorized' });
     return;
   }
   next();
+}
+
+// Unified auth gate: HTML routes (/brain) and JSON API routes (/api/dashboard) share requireDashboardAuth
+const dashboardGate = requireDashboardAuth;
+
+/**
+ * Auth middleware for orchestrator & cron endpoints:
+ * Accepts Vercel CRON_SECRET Bearer token, BRAIN_SYNC_SECRET, or Dashboard auth.
+ */
+function requireOrchestratorOrCronAuth(req, res, next) {
+  const cronSecret = process.env.CRON_SECRET?.trim() ?? '';
+  const syncSecret = process.env.BRAIN_SYNC_SECRET?.trim() ?? '';
+  const bearer = req.headers.authorization?.replace(/^Bearer\s+/i, '').trim() ?? '';
+  const syncHeader =
+    typeof req.headers['x-brain-sync-secret'] === 'string'
+      ? req.headers['x-brain-sync-secret'].trim()
+      : '';
+
+  if (secretConfigured(cronSecret) && bearer && safeEqual(bearer, cronSecret)) {
+    next();
+    return;
+  }
+  if (
+    secretConfigured(syncSecret) &&
+    ((bearer && safeEqual(bearer, syncSecret)) || (syncHeader && safeEqual(syncHeader, syncSecret)))
+  ) {
+    next();
+    return;
+  }
+
+  requireDashboardAuth(req, res, next);
 }
 
 function finishDashboardAuth(req, res) {
@@ -201,27 +263,6 @@ function servePitchDeck(_req, res) {
   res.type('html').send(readFileSync(PITCH_DECK_HTML, 'utf8'));
 }
 
-function requireDashboardAuth(req, res, next) {
-  if (isDashboardHtmlRoute(req) && req.query?.token) {
-    if (!checkAuthRateLimit(req, res)) return;
-    if (tryMigrateQueryToken(req, res)) return;
-  }
-  const auth = verifyDashboardAccess(req);
-  if (!auth.ok) {
-    if (auth.status === 503) {
-      denyDashboard(res, req, 503, NOT_CONFIGURED_HTML);
-      return;
-    }
-    if (isDashboardHtmlRoute(req) || wantsHtml(req)) {
-      denyDashboard(res, req);
-      return;
-    }
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
-  }
-  next();
-}
-
 const BRAIN_BUILD =
   process.env.BRAIN_BUILD_ID?.trim() ||
   (process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7) : '') ||
@@ -270,6 +311,9 @@ app.get('/api/health', async (req, res) => {
     resendWebhook: secretConfigured(process.env.RESEND_WEBHOOK_SECRET),
     engagementApi: '/api/engagement/stats',
     previewTrackApi: '/api/v1/track/preview',
+    orchestratorPipelineApi: '/api/orchestrator/pipeline',
+    decisionReviewApi: '/api/orchestrator/decision-review',
+    watchdogCronApi: '/api/cron/watchdog',
   });
 });
 
@@ -278,15 +322,205 @@ app.get('/api/engagement/stats', async (_req, res) => {
   res.json({ ok: true, stats, topEngaged: getTopEngaged(20), updatedAt: new Date().toISOString() });
 });
 
+/**
+ * Multi-Agent Role Stacking & Three-Pass Verification Loop Endpoints
+ */
+app.get('/api/orchestrator/roles', requireDashboardAuth, (_req, res) => {
+  const roles = listRolePrompts().map((p) => ({
+    role: p.role,
+    slug: p.slug,
+    version: p.version,
+    updated: p.updated,
+    stage: p.stage,
+    outputContract: p.outputContract,
+    filename: p.filename,
+  }));
+  res.json({ ok: true, roles });
+});
+
+async function handleRolePipelineRequest(req, res) {
+  const body = req.body ?? {};
+  const mode = typeof body.mode === 'string' ? body.mode.trim().toLowerCase() : 'pipeline';
+
+  try {
+    if (mode === 'decision-review' || mode === 'decision') {
+      const title =
+        typeof body.title === 'string' && body.title.trim() ? body.title.trim() : 'Project Decision';
+      const proposal = typeof body.proposal === 'string' ? body.proposal : body.request;
+      if (typeof proposal !== 'string' || !proposal.trim()) {
+        res.status(400).json({ error: 'proposal (or request) is required for decision-review mode' });
+        return;
+      }
+
+      const review = await runDecisionReview({
+        title,
+        proposal,
+        context: body.context ?? {},
+        onTelemetry: async (entry) => {
+          await addRoleTelemetry(entry);
+        },
+      });
+
+      res.json(review);
+      return;
+    }
+
+    const request = typeof body.request === 'string' ? body.request : body.prompt;
+    if (typeof request !== 'string' || !request.trim()) {
+      res.status(400).json({ error: 'request (or prompt) is required' });
+      return;
+    }
+
+    const result = await runRoleStackPipeline({
+      request,
+      context: body.context ?? {},
+      initialDraft: typeof body.initialDraft === 'string' ? body.initialDraft : null,
+      maxPasses: typeof body.maxPasses === 'number' ? body.maxPasses : 3,
+      enforceThreePasses: body.enforceThreePasses ?? true,
+      onTelemetry: async (entry) => {
+        await addRoleTelemetry(entry);
+      },
+    });
+
+    if (result.blocked) {
+      await pushOrchestratorAlerts([
+        {
+          id: `block-${result.runId}`,
+          source: 'contrarian-verifier',
+          domain: 'orchestrator',
+          kind: 'contrarian_block',
+          severity: 'critical',
+          message: `Contrarian/Verifier BLOCKED pipeline run ${result.runId}: ${result.contrarian?.summary ?? 'critical findings detected'}`,
+          details: {
+            runId: result.runId,
+            findings: result.contrarian?.findings ?? [],
+          },
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    }
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : 'Role pipeline execution failed',
+    });
+  }
+}
+
+app.post('/api/orchestrator/pipeline', requireOrchestratorOrCronAuth, handleRolePipelineRequest);
+app.post('/api/v1/orchestrator/pipeline', requireOrchestratorOrCronAuth, handleRolePipelineRequest);
+
+async function handleDecisionReviewRequest(req, res) {
+  const body = req.body ?? {};
+  const title =
+    typeof body.title === 'string' && body.title.trim() ? body.title.trim() : 'Project Decision';
+  const proposal = typeof body.proposal === 'string' ? body.proposal : body.request;
+
+  if (typeof proposal !== 'string' || !proposal.trim()) {
+    res.status(400).json({ error: 'proposal is required' });
+    return;
+  }
+
+  try {
+    const review = await runDecisionReview({
+      title,
+      proposal,
+      context: body.context ?? {},
+      onTelemetry: async (entry) => {
+        await addRoleTelemetry(entry);
+      },
+    });
+    res.json(review);
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : 'Decision review failed',
+    });
+  }
+}
+
+app.post(
+  '/api/orchestrator/decision-review',
+  requireOrchestratorOrCronAuth,
+  handleDecisionReviewRequest
+);
+app.post(
+  '/api/v1/orchestrator/decision-review',
+  requireOrchestratorOrCronAuth,
+  handleDecisionReviewRequest
+);
+
+app.get('/api/orchestrator/telemetry', requireDashboardAuth, async (req, res) => {
+  const limit = Number.parseInt(String(req.query.limit ?? '50'), 10) || 50;
+  const [telemetry, alerts] = await Promise.all([
+    listRoleTelemetry(limit),
+    listOrchestratorAlerts(limit),
+  ]);
+  res.json({
+    ok: true,
+    telemetry,
+    alerts,
+  });
+});
+
+/**
+ * Autonomous Infrastructure Watchdog Endpoints (Vercel Cron + Manual Trigger + Status)
+ */
+async function handleWatchdogRun(_req, res) {
+  try {
+    const report = await runInfrastructureWatchdog();
+    res.json({
+      ok: report.downCount === 0,
+      ...report,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : 'Watchdog execution failed',
+    });
+  }
+}
+
+app.get('/api/cron/watchdog', requireOrchestratorOrCronAuth, handleWatchdogRun);
+app.post('/api/watchdog/run', requireOrchestratorOrCronAuth, handleWatchdogRun);
+app.post('/api/v1/watchdog/run', requireOrchestratorOrCronAuth, handleWatchdogRun);
+
+app.get('/api/watchdog/status', requireDashboardAuth, async (_req, res) => {
+  const config = getWatchdogConfig();
+  const [latestRun, recentRuns, alerts] = await Promise.all([
+    getLatestWatchdogRun(),
+    listWatchdogRuns(10),
+    listOrchestratorAlerts(30),
+  ]);
+  res.json({
+    ok: true,
+    config,
+    latestRun,
+    recentRuns,
+    alerts: alerts.filter((a) => a.source === 'watchdog'),
+  });
+});
+
 app.get('/api/dashboard', requireDashboardAuth, async (_req, res) => {
-  const system = await getSystemSnapshot();
+  const [system, conversions, roleTelemetry, latestWatchdogRun, alerts] = await Promise.all([
+    getSystemSnapshot(),
+    listConversions(),
+    listRoleTelemetry(30),
+    getLatestWatchdogRun(),
+    listOrchestratorAlerts(30),
+  ]);
   const engagement = getEngagementStats();
-  const conversions = await listConversions();
   const paid = conversions.filter((e) => e.status === 'paid' || e.status === 'complete');
   const outreachCount = system?.contacted ?? 0;
   const today = new Date().toISOString().slice(0, 10);
   const todayPaid = paid.filter((e) => e.createdAt.startsWith(today));
   const previewBase = system?.previewBase ?? 'https://preview.ceo.slay.llc';
+  const watchdogConfig = getWatchdogConfig();
+  const rolePrompts = listRolePrompts().map((p) => ({
+    role: p.role,
+    slug: p.slug,
+    version: p.version,
+    stage: p.stage,
+  }));
 
   res.json({
     system,
@@ -354,6 +588,16 @@ app.get('/api/dashboard', requireDashboardAuth, async (_req, res) => {
       recentSessions: system?.recentSessions ?? [],
       controlMatrix: MONITOR_CONTROL_MATRIX,
       attributionFormat: 'client_reference_id: "{businessId}:{tier}" · status: "complete"',
+    },
+    orchestrator: {
+      roles: rolePrompts,
+      telemetry: roleTelemetry,
+      alerts,
+    },
+    watchdog: {
+      properties: watchdogConfig.properties,
+      thresholds: watchdogConfig.thresholds,
+      latestRun: latestWatchdogRun,
     },
     updatedAt: new Date().toISOString(),
   });

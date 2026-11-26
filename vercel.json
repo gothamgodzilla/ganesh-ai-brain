@@ -1,17 +1,23 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
+  "version": 2,
+  "buildCommand": "npm --prefix brain-server/ui install --include=dev && npm --prefix brain-server/ui run build",
   "outputDirectory": "brain-server/console-dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
-  ],
   "functions": {
     "api/index.mjs": {
       "maxDuration": 30,
-      "includeFiles": "{brain-server/*.html,brain-server/console-dist/**,lib/**,contacted-registry.cjs}"
+      "includeFiles": "{brain-server/**,lib/**,prompts/**}"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/watchdog",
+      "schedule": "0 7 * * *"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index"
+    }
+  ]
 }

@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+# Ganesh AI Brain Pre-Commit Verification Gate
+# Runs syntax checks, versioned prompt validation, secret/edge-case smell scan,
+# the 3-pass Contrarian verification check, and unit tests.
+#
+# Emergency bypass ONLY (incident recovery / hotfix):
+#   git commit --no-verify
+# or:
+#   GANESH_SKIP_PRECOMMIT=1 git commit -m "..."
+
+set -e
+
+if [ "${GANESH_SKIP_PRECOMMIT:-0}" = "1" ]; then
+  echo "⚠️  GANESH_SKIP_PRECOMMIT=1 set — bypassing pre-commit verification gate (emergency only)."
+  exit 0
+fi
+
+node scripts/verify-generation.mjs --fast

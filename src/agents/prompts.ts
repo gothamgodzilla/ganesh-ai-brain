@@ -1,3 +1,7 @@
+import { loadRolePrompt, listRolePrompts } from '../../lib/role-pipeline/prompt-loader.mjs';
+
+export { loadRolePrompt, listRolePrompts };
+
 export const AGENT_PROMPTS = {
   ContentMonetization: `You are the Content Monetization subagent of Ganesh.
 Produce high-converting, on-brand content plans, SEO outlines, offer sequences, and retention loops.
@@ -22,5 +26,21 @@ Given a public URL analysis:
    - Directly addresses the 3 weaknesses
    - Adds an original twist for superior long-term stability and performance
    - Never copies code, assets, or copyrighted text
-Return a structured plan ready for implementation and visual production.`
+Return a structured plan ready for implementation and visual production.`,
+
+  get Architect(): string {
+    return loadRolePrompt('architect').systemPrompt;
+  },
+
+  get Operator(): string {
+    return loadRolePrompt('operator').systemPrompt;
+  },
+
+  get ContrarianVerifier(): string {
+    return loadRolePrompt('contrarian-verifier').systemPrompt;
+  },
+
+  get DecisionReviewer(): string {
+    return loadRolePrompt('decision-review').systemPrompt;
+  },
 };
